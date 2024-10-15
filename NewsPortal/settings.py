@@ -199,6 +199,22 @@ APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"  # Формат отображен
 APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
 
 
+
+# ---------------------- Изменения для mail_admins ----------------------
+# Указываем список администраторов, которые будут получать сообщения об ошибках.
+# Формат: список кортежей (имя, email)
+ADMINS = [
+    # ('Admin Name', 'admin@example.com'),  # Замените на реальные данные
+    ('admin', os.getenv('EMAIL_HOST_USER')),  # Замените на реальные данные
+    # Можно добавить несколько админов, если необходимо
+]
+
+# Указываем email-адрес, который будет использоваться в качестве отправителя для сообщений администраторам.
+SERVER_EMAIL = os.getenv('EMAIL_HOST_USER')  # Замените на реальный email, который будет использоваться для отправки
+# ---------------------- Конец изменений для mail_admins ----------------------
+
+
+
 # Создаём папку для логов, если она не существует
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(LOGS_DIR):
@@ -218,7 +234,7 @@ LOGGING = {
             'style': '{',
         },
         'console_error': {  # Форматтер для ошибок в консоль
-            'format': '{asctime} {levelname} {pathname} {message}',  # Путь к файлу и стэк ошибки
+            'format': '{asctime} {levelname} {pathname} {message} {exc_info}',  # Время, уровень, путь и стэк ошибки
             'style': '{',
         },
         'file_general': {  # Форматтер для общего логирования в файл general.log
@@ -226,7 +242,7 @@ LOGGING = {
             'style': '{',
         },
         'file_error': {  # Форматтер для ошибок в файл errors.log
-            'format': '{asctime} {levelname} {pathname} {message}',  # Время, уровень, путь и стэк ошибки
+            'format': '{asctime} {levelname} {pathname} {message} {exc_info}',  # Время, уровень, путь и стэк ошибки
             'style': '{',
         },
         'file_security': {  # Форматтер для файла security.log
@@ -267,7 +283,7 @@ LOGGING = {
         'console_error': {  # Обработчик для ошибок в консоль
             'level': 'ERROR',
             'class': 'logging.StreamHandler',
-            'formatter': 'console_error',
+            'formatter': 'console_error',  # Используем форматтер с выводом стэка ошибок
             'filters': ['require_debug_true'],  # Работает только когда DEBUG=True
         },
         'file_general': {  # Обработчик для общего файла логов
@@ -281,9 +297,10 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'errors.log'),  # Логи сохраняются в папку logs
-            'formatter': 'file_error',
-            'filters': ['require_debug_false'],  # Логи ошибок пишутся только при DEBUG=False
+            'formatter': 'file_error',  # Используем форматтер с выводом стэка ошибок
+            # 'filters': ['require_debug_false'],  # Логи ошибок пишутся только при DEBUG=False
         },
+
         'file_security': {  # Обработчик для логирования безопасности
             'level': 'ERROR',
             'class': 'logging.FileHandler',
@@ -300,33 +317,33 @@ LOGGING = {
     'loggers': {
         'django': {  # Основной логгер Django
             'handlers': ['console_debug', 'console_warning', 'console_error', 'file_general', 'file_error'],  # Обработчики для разных уровней
-            'level': 'DEBUG',  # Уровень логирования
+            'level': 'DEBUG',  # Уровень логирования DEBUG для пропуска сообщений
             'propagate': True,  # Сообщения передаются в другие логгеры
         },
         'django.request': {  # Логгер для запросов
             'handlers': ['file_error', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': False,
+            'level': 'DEBUG', # Уровень логирования DEBUG для пропуска сообщений
+            'propagate': True, # Сообщения передаются в основной логгер django
         },
         'django.server': {  # Логгер для ошибок сервера
             'handlers': ['file_error', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': False,
+            'level': 'DEBUG', # Уровень логирования DEBUG для пропуска сообщений
+            'propagate': True, # Сообщения передаются в основной логгер django
         },
         'django.template': {  # Логгер для шаблонов
             'handlers': ['file_error'],
-            'level': 'ERROR',
-            'propagate': False,
+            'level': 'DEBUG', # Уровень логирования DEBUG для пропуска сообщений
+            'propagate': True, # Сообщения передаются в основной логгер django
         },
         'django.db.backends': {  # Логгер для базы данных
             'handlers': ['file_error'],
-            'level': 'ERROR',
-            'propagate': False,
+            'level': 'DEBUG', # Уровень логирования DEBUG для пропуска сообщений
+            'propagate': True, # Сообщения передаются в основной логгер django
         },
         'django.security': {  # Логгер для безопасности
             'handlers': ['file_security'],
             'level': 'ERROR',
-            'propagate': False,
+            'propagate': False, # Здесь нет необходимости передавать сообщения в основной логгер
         },
 
         # Сохраняем текущие логгеры для apscheduler и news.custom_cache
@@ -342,6 +359,7 @@ LOGGING = {
         },
     },
 }
+
 
 
 
