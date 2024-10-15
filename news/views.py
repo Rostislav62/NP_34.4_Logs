@@ -3,6 +3,10 @@
 # Он включает в себя классы представлений и общие вспомогательные методы, которые минимизируют дублирование кода.
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth import update_session_auth_hash, authenticate, login
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.models import Group, User
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404, render, redirect
@@ -10,10 +14,6 @@ from django.views import View
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.utils import timezone
 from django.urls import reverse_lazy
-from django.contrib.auth import update_session_auth_hash, authenticate, login
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.models import Group, User
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import cache_page
 from django.core.mail import send_mail
@@ -26,7 +26,6 @@ from .utils import get_article_cache_key, get_category_by_id
 from .email_utils import EmailContentBuilder, send_custom_email
 from .filters import ArticleFilter
 from .mixins import is_author_or_superuser, custom_user_passes_test
-from django.contrib.auth.decorators import user_passes_test
 
 
 
@@ -277,43 +276,6 @@ class ArticleDeleteView(LoginRequiredMixin, UserPassesTestMixin, BaseArticleView
         return redirect('article_list')
 
 
-# class ArticleSearchView(BaseArticleView):
-#     """
-#     Представление для поиска и фильтрации статей.
-#     Поддерживает фильтрацию по автору, категории и рейтингу.
-#     """
-#     template_name = 'news/article_search.html'
-#     paginate_by = 10
-#
-#     def get(self, request):
-#         queryset = Article.objects.all().order_by('-publication_date')
-#
-#         # Применение фильтров
-#         filterset = ArticleFilter(request.GET, queryset=queryset)
-#         queryset = filterset.qs
-#
-#         # Пагинация
-#         page_number = request.GET.get('page', 1)
-#         page_obj, total_count = self.get_articles(queryset=queryset, page_number=page_number, items_per_page=self.paginate_by)
-#
-#         # Дополнительные данные для фильтрации
-#         authors = User.objects.filter(groups__name='authors')
-#         categories = Category.objects.all()
-#
-#         return render(request, self.template_name, {
-#             'filterset': filterset,
-#             'page_obj': page_obj,
-#             'authors': authors,
-#             'categories': categories,
-#             'filter_params': request.GET.urlencode(),
-#         })
-
-# Путь: news/views.py
-from django.shortcuts import render
-from django.contrib.auth.models import Group, User
-from .models import Article, Category, Rating
-from .filters import ArticleFilter
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 class ArticleSearchView(BaseArticleView):
     """
